@@ -181,7 +181,7 @@ exports.updateJobRequest = async (req, res) => {
       { new: true }
     );
     let jobs = req.body.testRows;
-    console.log(req.body)
+    console.log(req.body);
     const incomingTechIds = jobs.map((j) => j.tech);
     for (const item of jobs) {
       await Job.updateOne(
@@ -192,7 +192,7 @@ exports.updateJobRequest = async (req, res) => {
     }
 
     await Job.deleteMany({
-      jobId:data.jobId,
+      jobId: data.jobId,
       tech: { $nin: incomingTechIds },
     });
 
@@ -211,7 +211,221 @@ exports.updateJobRequest = async (req, res) => {
     //   data: jobrequest,
     // });
   } catch (error) {
-    console.log(error)
+    console.log(error);
     return res.error({ status: 500, error });
+  }
+};
+
+exports.getJobsByUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    let jobs = await Job.aggregate([
+      {
+        $match: { tech: id },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "tech",
+          foreignField: "id",
+          as: "user",
+        },
+      },
+      { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: "worksheets",
+          localField: "testMethod",
+          foreignField: "workSheetId",
+          as: "worksheet",
+        },
+      },
+      { $unwind: { path: "$worksheet", preserveNullAndEmptyArrays: true } },
+
+      {
+        $lookup: {
+          from: "jobrequests",
+          localField: "jobId",
+          foreignField: "jobId",
+          as: "jobDetails",
+        },
+      },
+      { $unwind: { path: "$jobDetails", preserveNullAndEmptyArrays: true } },
+
+      {
+        $project: {
+          status: 1,
+          jobId: 1,
+          tech: 1,
+          testMethod: 1,
+
+          worksheetName: "$worksheet.name",
+          worksheetFields: "$worksheet.fields",
+          technician: "$user.userName",
+          jobDetails: {
+            requester: "$jobDetails.requestedBy",
+            createdAt: "$jobDetails.createdAt",
+            clientName: "$jobDetails.clientName",
+            lastDate: "$jobDetails.lastDate",
+          },
+        },
+      },
+
+      {
+        $group: {
+          _id: "$status",
+          jobs: { $push: "$$ROOT" },
+        },
+      },
+
+      {
+        $project: {
+          _id: 0,
+          status: "$_id",
+          jobs: 1,
+        },
+      },
+    ]);
+    if (!jobs) {
+      return res.error({ status: 404, message: "No jobs found !" });
+    }
+    let data = {
+      pending: [],
+      inProgress: [],
+      completed: [],
+    };
+    jobs.forEach((job) => {
+      if (job.status == "Pending") {
+        data.pending = job.jobs;
+      }
+      if (job.status == "In progress") {
+        data.inProgress = job.jobs;
+      }
+      if (job.status == "Completed") {
+        data.completed = job.jobs;
+      }
+    });
+    return res.success({ status: 200, data });
+  } catch (error) {
+    console.log(error);
+    return res.error({ status: 500, error });
+  }
+};
+
+exports.updateJobStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateField = {};
+    const notToUpdate = {
+      _id:true,
+      tech:true,
+      jobId:true,
+      testMethod:true
+    }
+    for(let key in req.body){
+       if(req.body[key] && !notToUpdate[key]){
+        updateField[key] = req.body[key]
+       }
+    }
+    const updated = await Job.findByIdAndUpdate(
+      id,
+      { $set:{status:updateField.status} },
+      { new: true }
+    );
+    console.log("id == ",id)
+    if(!updated){
+       return res.error({status:"No job found for the id"})
+    }
+
+       let jobs = await Job.aggregate([
+      {
+        $match: { tech: req.body.tech },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "tech",
+          foreignField: "id",
+          as: "user",
+        },
+      },
+      { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: "worksheets",
+          localField: "testMethod",
+          foreignField: "workSheetId",
+          as: "worksheet",
+        },
+      },
+      { $unwind: { path: "$worksheet", preserveNullAndEmptyArrays: true } },
+
+      {
+        $lookup: {
+          from: "jobrequests",
+          localField: "jobId",
+          foreignField: "jobId",
+          as: "jobDetails",
+        },
+      },
+      { $unwind: { path: "$jobDetails", preserveNullAndEmptyArrays: true } },
+
+      {
+        $project: {
+          status: 1,
+          jobId: 1,
+          tech: 1,
+          testMethod: 1,
+
+          worksheetName: "$worksheet.name",
+          worksheetFields: "$worksheet.fields",
+          technician: "$user.userName",
+          jobDetails: {
+            requester: "$jobDetails.requestedBy",
+            createdAt: "$jobDetails.createdAt",
+            clientName: "$jobDetails.clientName",
+            lastDate: "$jobDetails.lastDate",
+          },
+        },
+      },
+
+      {
+        $group: {
+          _id: "$status",
+          jobs: { $push: "$$ROOT" },
+        },
+      },
+
+      {
+        $project: {
+          _id: 0,
+          status: "$_id",
+          jobs: 1,
+        },
+      },
+    ]);
+    if (!jobs) {
+      return res.error({ status: 404, message: "No jobs found !" });
+    }
+    let data = {
+      pending: [],
+      inProgress: [],
+      completed: [],
+    };
+    jobs.forEach((job) => {
+      if (job.status == "Pending") {
+        data.pending = job.jobs;
+      }
+      if (job.status == "In progress") {
+        data.inProgress = job.jobs;
+      }
+      if (job.status == "Completed") {
+        data.completed = job.jobs;
+      }
+    });
+    return res.success({ status: 200, data,message:updateField.status });
+  } catch (error) {
+    console.log(error)
+    return res.error({status:500,error})
   }
 };
