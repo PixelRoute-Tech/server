@@ -263,7 +263,7 @@ exports.getJobsByUser = async (req, res) => {
           worksheetFields: "$worksheet.fields",
           technician: "$user.userName",
           jobDetails: {
-            requester: "$jobDetails.requestedBy",
+            clientId: "$jobDetails.clientId",
             createdAt: "$jobDetails.createdAt",
             clientName: "$jobDetails.clientName",
             lastDate: "$jobDetails.lastDate",

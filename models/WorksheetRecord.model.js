@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-
+const {Job} = require("./Job.model");
 const WorksheetRecordSchema = new mongoose.Schema(
   {
     jobId: {
@@ -31,5 +31,20 @@ const WorksheetRecordSchema = new mongoose.Schema(
     timestamps: true, // adds createdAt and updatedAt
   }
 );
+
+WorksheetRecordSchema.post("save", async function (doc) {
+  try {
+    const jobId = doc.jobId;
+    const testMethod = doc.worksheetId;
+    const updatedDoc = await Job.findOneAndUpdate(
+      { jobId, testMethod },
+      { $set: { status: "Completed" } },
+      { new: true }
+    );
+    console.log(updatedDoc)
+  } catch (err) {
+    console.log(err);
+  }
+});
 
 module.exports = mongoose.model("WorksheetRecord", WorksheetRecordSchema);
