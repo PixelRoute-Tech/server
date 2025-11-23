@@ -29,7 +29,7 @@ app
   .set("views", path.join(__dirname, "views"))
   .set("view engine", "ejs");
 
-app.get("/", (req, res) => {
+app.get("/v1/health", (req, res) => {
   res.success({status:200,message:"Hello world"})
 });
 
