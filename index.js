@@ -30,7 +30,7 @@ app
   .set("view engine", "ejs");
 
 app.get("/", (req, res) => {
-  res.render("index");
+  res.success({status:200,message:"Hello world"})
 });
 
 // Define Routes
