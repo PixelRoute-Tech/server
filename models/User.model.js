@@ -1,16 +1,22 @@
 const mongoose = require("mongoose");
 const moment = require("moment");
 const Counter = require("./Counter.model");
+const Settings = require("./Settings.model")
 const UserSchema = new mongoose.Schema({
   id: {
     type: String,
     required: false,
-    unique:true
+    unique: false,
+  },
+  userId: {
+    type: String,
+    required: false,
+    unique: true,
   },
   companyId: {
     type: String,
     required: true,
-    unique:true
+    unique: true,
   },
   userName: {
     type: String,
@@ -60,13 +66,22 @@ UserSchema.pre("save", async function (next) {
   if (user.id) return next();
   try {
     const counter = await Counter.findByIdAndUpdate(
-      { _id: "userId" },
+      "userId",
       { $inc: { seq: 1 } },
       { new: true, upsert: true }
     );
 
     const seqNumber = counter.seq.toString().padStart(5, "0"); // "00001"
+    user.userId = `ERP${seqNumber}`;
     user.id = `ERP${seqNumber}`;
+    const settings = new Settings({
+      useId: `ERP${seqNumber}`,
+      primaryColor: "174 77% 56%",
+      fontFamily: "Montserrat, system-ui, sans-serif",
+      fontSize: "small",
+      borderRadius: "small",
+    });
+    settings.save();
     next();
   } catch (err) {
     next(err);

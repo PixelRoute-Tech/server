@@ -54,14 +54,6 @@ exports.register = async (req, res) => {
     await user.save();
     console.log("after create");
     const payload = { user };
-    const settings = new Settings({
-      useId: user.id,
-      primaryColor: "174 77% 56%",
-      fontFamily: "Montserrat, system-ui, sans-serif",
-      fontSize: "small",
-      borderRadius: "small",
-    });
-    settings.save();
     jwt.sign(
       payload,
       process.env.JWT_SECRET,
@@ -198,12 +190,21 @@ exports.deleteUser = async (req, res) => {
     console.log(user.id);
     if (!user) return res.error({ status: 404, message: "User not found" });
     await User.findOneAndDelete({ id: user.id });
-    res.success({ status: 200, message: `User with id ${user.id} removed` });
+     if (user.imageUrl) {
+      const filePath = path.join(process.cwd(), user.imageUrl); 
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+        console.log(`Deleted file: ${filePath}`);
+      } else {
+        console.log("File not found:", filePath);
+      }
+    }
+   return res.success({ status: 200, message: `User with id ${user.id} removed` });
   } catch (err) {
     console.error(err.message);
     if (err.kind === "ObjectId") {
       return res.error({ status: 404, message: "User not found" });
     }
-    res.error({ status: 500 });
+   return res.error({ status: 500 });
   }
 };
