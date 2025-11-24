@@ -75,7 +75,7 @@ UserSchema.pre("save", async function (next) {
     user.userId = `ERP${seqNumber}`;
     user.id = `ERP${seqNumber}`;
     const settings = new Settings({
-      useId: `ERP${seqNumber}`,
+      userId: `ERP${seqNumber}`,
       primaryColor: "174 77% 56%",
       fontFamily: "Montserrat, system-ui, sans-serif",
       fontSize: "small",
