@@ -190,8 +190,8 @@ exports.deleteUser = async (req, res) => {
     console.log(user.id);
     if (!user) return res.error({ status: 404, message: "User not found" });
     await User.findOneAndDelete({ id: user.id });
-     if (user.imageUrl) {
-      const filePath = path.join(process.cwd(), user.imageUrl); 
+    if (user.imageUrl) {
+      const filePath = path.join(process.cwd(), user.imageUrl);
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
         console.log(`Deleted file: ${filePath}`);
@@ -199,12 +199,15 @@ exports.deleteUser = async (req, res) => {
         console.log("File not found:", filePath);
       }
     }
-   return res.success({ status: 200, message: `User with id ${user.id} removed` });
+    return res.success({
+      status: 200,
+      message: `User with id ${user.id} removed`,
+    });
   } catch (err) {
     console.error(err.message);
     if (err.kind === "ObjectId") {
       return res.error({ status: 404, message: "User not found" });
     }
-   return res.error({ status: 500 });
+    return res.error({ status: 500 });
   }
 };

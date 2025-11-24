@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const moment = require("moment");
 const Counter = require("./Counter.model");
-const Settings = require("./Settings.model")
+const Settings = require("./Settings.model");
 const UserSchema = new mongoose.Schema({
   id: {
     type: String,
