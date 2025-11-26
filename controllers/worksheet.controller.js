@@ -187,6 +187,15 @@ exports.getWorksheetRecordData = async (req, res) => {
       },
       { $unwind: { path: "$technician", preserveNullAndEmptyArrays: true } },
 
+      {
+        $lookup: {
+          from: "recordimages",
+          localField: "recordId", // field in jobs document
+          foreignField: "recordId", // field in users collection
+          as: "images",
+        },
+      },
+
       // Final clean structured output
       {
         $project: {
@@ -197,7 +206,8 @@ exports.getWorksheetRecordData = async (req, res) => {
           worksheet: "$worksheet",
           job: "$jobs",
           technician: "$technician",
-          jobrequest:"$jobrequests"
+          jobrequest:"$jobrequests",
+          images:"$images"
         },
       },
     ]);
