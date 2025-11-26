@@ -41,12 +41,12 @@ const BusinessSchema = new mongoose.Schema({
   accountDeptContact: {
     type: String,
     trim: true,
-    required: true,
+    required: false,
   },
   accountPhone: {
     type: String,
     trim: true,
-    required: true,
+    required: false,
   },
   fax: {
     type: String,
@@ -56,14 +56,14 @@ const BusinessSchema = new mongoose.Schema({
     type: String,
     lowercase: true,
     trim: true,
-    required: true,
+    required: false,
     match: [/^\S+@\S+\.\S+$/, "Invalid email format"],
   },
   invoiceEmail: {
     type: String,
     lowercase: true,
     trim: true,
-    required: true,
+    required: false,
     match: [/^\S+@\S+\.\S+$/, "Invalid email format"],
   },
   createdDate: {
