@@ -17,6 +17,8 @@ exports.register = async (req, res) => {
     department,
     userRole,
     imageUrl = "",
+    qualification,
+    companyId,
   } = req.body;
 
   try {
@@ -31,7 +33,7 @@ exports.register = async (req, res) => {
         .slice(0, 2);
     }
     if (user) {
-      return res.status(400).json({ msg: "User already exists" });
+      return res.error({ status: 400, message: "User already exists" });
     }
     user = new User({
       userName,
@@ -42,6 +44,8 @@ exports.register = async (req, res) => {
       department,
       userRole,
       imageUrl,
+      qualification,
+      companyId,
     });
 
     const salt = await bcrypt.genSalt(10);
@@ -50,14 +54,6 @@ exports.register = async (req, res) => {
     await user.save();
     console.log("after create");
     const payload = { user };
-    const settings = new Settings({
-      useId: user.id,
-      primaryColor: "174 77% 56%",
-      fontFamily: "Montserrat, system-ui, sans-serif",
-      fontSize: "small",
-      borderRadius: "small",
-    });
-    settings.save();
     jwt.sign(
       payload,
       process.env.JWT_SECRET,
@@ -81,7 +77,7 @@ exports.login = async (req, res) => {
 
   try {
     let user = await User.findOne({ email });
-    console.log(user)
+    console.log(user);
     if (!user) {
       return res.error({ message: "User not found", status: 400 });
     }
@@ -92,8 +88,8 @@ exports.login = async (req, res) => {
       return res.error({ message: "Invalid credentials", status: 400 });
     }
     let settings = await Settings.findOne({ userId: user.id });
-    
-    let company = await Company.findById(user.companyId)
+
+    let company = await Company.findById(user.companyId);
     if (!settings) {
       settings = new Settings({
         userId: user.id,
@@ -114,7 +110,7 @@ exports.login = async (req, res) => {
       { expiresIn: "24h" },
       (err, token) => {
         if (err) throw err;
-        res.success({ data: { token, user,company, settings, } });
+        res.success({ data: { token, user, company, settings } });
       }
     );
   } catch (error) {
@@ -151,7 +147,7 @@ exports.updateUser = async (req, res) => {
   let userFields = {};
   try {
     let user = await User.findOne({ id: req.body.id }).select("-password");
-    let company = await Company.findById(user.companyId)
+    let company = await Company.findById(user.companyId);
     if (!user) return res.error({ status: 404, message: "User not found" });
 
     if (req?.body?.password) {
@@ -176,7 +172,11 @@ exports.updateUser = async (req, res) => {
       { new: true }
     ).select("-password");
 
-    res.success({ status: 200, message: "Updated successfully", data: {user,company} });
+    res.success({
+      status: 200,
+      message: "Updated successfully",
+      data: { user, company },
+    });
   } catch (error) {
     console.log(error);
     res.error({ status: 500, error });
@@ -187,20 +187,27 @@ exports.deleteUser = async (req, res) => {
   try {
     console.log(req.params.id);
     let user = await User.findOne({ id: req.params.id });
-    console.log(req.user.id);
+    console.log(user.id);
     if (!user) return res.error({ status: 404, message: "User not found" });
-
-    // Check if user owns the account
-    if (user.id.toString() == req.user.id) {
-      return res.error({ status: 401, msg: "Not authorized" });
+    await User.findOneAndDelete({ id: user.id });
+    if (user.imageUrl) {
+      const filePath = path.join(process.cwd(), user.imageUrl);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+        console.log(`Deleted file: ${filePath}`);
+      } else {
+        console.log("File not found:", filePath);
+      }
     }
-    await User.findOneAndDelete({ id: req.params.id });
-    res.success({ status: 200, message: `User with id ${user.id} removed` });
+    return res.success({
+      status: 200,
+      message: `User with id ${user.id} removed`,
+    });
   } catch (err) {
     console.error(err.message);
     if (err.kind === "ObjectId") {
       return res.error({ status: 404, message: "User not found" });
     }
-    res.error({ status: 500 });
+    return res.error({ status: 500 });
   }
 };
