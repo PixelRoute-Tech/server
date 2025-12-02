@@ -18,11 +18,15 @@ const RecordImageSchema = new mongoose.Schema(
       required: true,
       default: "",
     },
-    type:{
-      type:String,
-      default:"Photo"
+    type: {
+      type: String,
+      default: "Photo",
     },
     description: {
+      type: String,
+      default: "",
+    },
+    fileName: {
       type: String,
       default: "",
     },

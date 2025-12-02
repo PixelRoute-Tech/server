@@ -1,27 +1,26 @@
 const RecordImagesSchema = require("../models/RecordImage.model");
+const { saveJsonFile } = require("../utils/saveFile");
+const path =  require("path");
 
 exports.addReportImage = async (req, res) => {
   try {
-    const { jobId, recordId, worksheetId, imageUrl, description } = req.body;
+    const { jobId, recordId, worksheetId, imageUrl, description,imagePath,filename } = req.body;
     const imageRecord = new RecordImagesSchema({
       jobId,
       recordId,
       worksheetId,
       url: imageUrl,
       description,
+      fileName:filename,
     });
-    console.log({
-      jobId,
-      recordId,
-      worksheetId,
-      url: imageUrl,
-      description,
-    });
+    console.log(filename,path);
 
     if (!imageRecord) {
       return res.error({ status: 400, message: "Can't save the image" });
     }
-    await imageRecord.save();
+    const filePath = path.join("uploads/imagepath",`${filename}.json`)
+    saveJsonFile(filePath,imagePath)
+    // await imageRecord.save();
     return res.success({ status: 200, maessage: "Image saved successfully" });
   } catch (error) {
     console.log(error);

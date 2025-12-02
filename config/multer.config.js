@@ -29,8 +29,9 @@ const fileStorage = multer.diskStorage({
 
   filename: (req, file, cb) => {
     const ext = file.originalname.split('.').pop();
-    const filename = `${req.body.recordId || "user"}-${Date.now()}.${ext}`;
-
+    const name = `${req.body.recordId || "user"}-${Date.now()}`
+    const filename = `${name}.${ext}`;
+    req.body.filename = name
     req.body.imageUrl = `/uploads/reportImages/${filename}`;
 
     cb(null, filename);
