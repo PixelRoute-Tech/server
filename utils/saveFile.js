@@ -1,5 +1,5 @@
 const fs = require("fs/promises");
-const path =  require("path");
+const path = require("path");
 
 exports.saveJsonFile = async (filePath, data) => {
   try {
@@ -31,8 +31,7 @@ exports.saveJsonFile = async (filePath, data) => {
     await fs.writeFile(filePath, data, "utf-8");
 
     console.log("JSON saved successfully!");
-
   } catch (error) {
-    console.error("Error saving JSON:", error);
+    throw new Error("Error saving JSON:", error);
   }
 };
