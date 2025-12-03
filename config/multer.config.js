@@ -18,7 +18,6 @@ const fileStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     const uploadPath = path.join("uploads", "reportImages");
 
-    // Create folder if it doesn't exist
     if (!fs.existsSync(uploadPath)) {
       fs.mkdirSync(uploadPath, { recursive: true });
     }
@@ -28,33 +27,53 @@ const fileStorage = multer.diskStorage({
 
   filename: (req, file, cb) => {
     const ext = file.originalname.split(".").pop();
-    const name = `${req.body.recordId || "report-image"}-${Date.now()}`;
-    const filename = `${name}.${ext}`;
+    const baseName = req.body.recordId || "report-image";
+    const timestamp = Date.now();
+
+    // Keep filename same for both file & preview
     if (!req.body.filename) {
-      req.body.filename = name;
+      req.body.filename = `${baseName}-${timestamp}`;
     }
-    req.body.imageUrl = `/uploads/reportImages/${filename}`;
-    cb(null, filename);
+
+    // Create final file name based on the field
+    let finalFileName = "";
+
+    if (file.fieldname === "file") {
+      finalFileName = `${req.body.filename}-file.${ext}`;
+      req.body.fileUrl = `/uploads/reportImages/${finalFileName}`;
+    }
+
+    if (file.fieldname === "preview") {
+      finalFileName = `${req.body.filename}-preview.${ext}`;
+      req.body.previewUrl = `/uploads/reportImages/${finalFileName}`;
+    }
+
+    cb(null, finalFileName);
   },
 });
 
 const deleteExistFile = async (req, res, next) => {
   try {
-    const oldImageUrl = req.body.previousPath; // e.g. "/uploads/reportImages/img-123.jpg"
+    const oldFile = req.body.previousFilePath; // old file path
+    const oldPreview = req.body.previousPreviewPath; // old preview path
 
-    if (oldImageUrl) {
-      // Convert URL path to actual server path
-      const filePath = path.join(process.cwd(), oldImageUrl);
+    const deleteIfExists = (fileUrl) => {
+      if (!fileUrl) return;
+
+      const filePath = path.join(process.cwd(), fileUrl);
 
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
-        console.log("Old image deleted:", filePath);
+        console.log("Deleted:", filePath);
       }
-    }
+    };
 
-    next(); // continue to multer upload
+    deleteIfExists(oldFile);
+    deleteIfExists(oldPreview);
+
+    next();
   } catch (err) {
-    console.error("Image delete error:", err);
+    console.error("Delete error:", err);
     next();
   }
 };
