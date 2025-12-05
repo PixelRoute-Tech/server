@@ -1,6 +1,6 @@
 const fs = require("fs/promises");
 const path = require("path");
-
+const FS = require("fs");
 exports.saveJsonFile = async (filePath, data) => {
   try {
     const dir = path.dirname(filePath);
@@ -33,5 +33,15 @@ exports.saveJsonFile = async (filePath, data) => {
     console.log("JSON saved successfully!");
   } catch (error) {
     throw new Error("Error saving JSON:", error);
+  }
+};
+
+exports.deleteIfExists = (fileUrl) => {
+  if (!fileUrl) return;
+
+  const filePath = path.join(process.cwd(), fileUrl);
+
+  if (FS.existsSync(filePath)) {
+    FS.unlinkSync(filePath);
   }
 };

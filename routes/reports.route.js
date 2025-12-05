@@ -1,10 +1,11 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const auth = require('../middleware/auth.middleware');
-const worksheetReport = require('../controllers/worksheetfile.controller');
-const reportImages = require('../controllers/reportImages.controller');
-router.get("/worksheet",auth,worksheetReport.generateWorksheetPdf)
-router.post("/report-image",auth,reportImages.addReportImage)
-router.put("/report-image/:id",auth,reportImages.updateReportImage)
-router.get("/report-image/:id",auth,reportImages.getReportImages)
+const auth = require("../middleware/auth.middleware");
+const worksheetReport = require("../controllers/worksheetfile.controller");
+const reportImages = require("../controllers/reportImages.controller");
+router.get("/worksheet", auth, worksheetReport.generateWorksheetPdf);
+router.post("/report-image", auth, reportImages.addReportImage);
+router.put("/report-image/:id", auth, reportImages.updateReportImage);
+router.delete("/report-image/:id", auth, reportImages.deleteReportImage);
+router.get("/report-image/:id", auth, reportImages.getReportImages);
 module.exports = router;

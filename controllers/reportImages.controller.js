@@ -1,5 +1,5 @@
 const RecordImagesSchema = require("../models/RecordImage.model");
-const { saveJsonFile } = require("../utils/saveFile");
+const { saveJsonFile,deleteIfExists } = require("../utils/files");
 const path = require("path");
 
 exports.addReportImage = async (req, res) => {
@@ -71,6 +71,22 @@ exports.updateReportImage = async (req, res) => {
     return res.error({ status: 500 });
   }
 };
+
+exports.deleteReportImage = async (req,res)=>{
+   try {
+    const {id} = req.params
+    const data = await RecordImagesSchema.findByIdAndDelete(id)
+    if(!data){
+       return res.error({status:500,message:"Cant delete the file !"})
+    }
+     const filePath = path.join("uploads/imagepath", `${data.fileName}.json`);
+     deleteIfExists(filePath)
+    return res.success({status:200,message:"Deleted successfully"})
+   } catch (error) {
+     console.log(error)
+     res.error({ status: 500, error });
+   }
+}
 
 exports.getReportImages = async (req, res) => {
   try {

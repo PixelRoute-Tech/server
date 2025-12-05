@@ -1,6 +1,7 @@
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
+const { deleteIfExists } = require("../utils/files");
 //multer configuration
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, "uploads/"), // folder for files
@@ -13,16 +14,6 @@ const storage = multer.diskStorage({
     cb(null, filename);
   }, // unique filename
 });
-
-const deleteIfExists = (fileUrl) => {
-  if (!fileUrl) return;
-
-  const filePath = path.join(process.cwd(), fileUrl);
-
-  if (fs.existsSync(filePath)) {
-    fs.unlinkSync(filePath);
-  }
-};
 
 const fileStorage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -65,10 +56,16 @@ const deleteExistFile = async (req, res, next) => {
   try {
     const oldFile = req.query.previousfilepath; // old file path
     const oldPreview = req.query.previouspreviewpath; // old preview path
-    console.table({ oldFile, oldPreview });
-    if (oldFile || oldPreview) {
-      deleteIfExists(oldFile);
-      deleteIfExists(oldPreview);
+    console.table(req.query);
+    if (req.method == "DELETE") {
+      if (oldFile || oldPreview) {
+        deleteIfExists(oldFile);
+        deleteIfExists(oldPreview);
+      }
+    } else {
+      if (oldPreview) {
+        deleteIfExists(oldPreview);
+      }
     }
     next();
   } catch (err) {
