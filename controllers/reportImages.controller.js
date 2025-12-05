@@ -13,14 +13,14 @@ exports.addReportImage = async (req, res) => {
       description,
       fileName:filename,
     });
-    console.log(filename,path);
+    console.log(req.body);
 
     if (!imageRecord) {
       return res.error({ status: 400, message: "Can't save the image" });
     }
     const filePath = path.join("uploads/imagepath",`${filename}.json`)
     saveJsonFile(filePath,imagePath)
-    await imageRecord.save();
+    // await imageRecord.save();
     return res.success({ status: 200, maessage: "Image saved successfully" });
   } catch (error) {
     console.log(error);

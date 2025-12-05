@@ -70,7 +70,6 @@ const deleteExistFile = async (req, res, next) => {
 
     deleteIfExists(oldFile);
     deleteIfExists(oldPreview);
-
     next();
   } catch (err) {
     console.error("Delete error:", err);
