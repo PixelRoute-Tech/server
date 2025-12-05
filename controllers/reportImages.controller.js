@@ -41,13 +41,14 @@ exports.addReportImage = async (req, res) => {
 exports.updateReportImage = async (req, res) => {
   try {
     const { id } = req.params;
-    const { fileUrl, previewUrl, description, imagePath, filename } = req.body;
+    const { fileUrl, previewUrl, description, imagePath, filename,type } = req.body;
 
     const filePath = path.join("uploads/imagepath", `${filename[1]}.json`);
     await saveJsonFile(filePath, imagePath);
     const data = await RecordImagesSchema.findByIdAndUpdate(id, {
       $set: {
         url: fileUrl,
+        type,
         preview: previewUrl,
         description,
         fileName: filename[1],
