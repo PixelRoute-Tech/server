@@ -5,5 +5,6 @@ const worksheetReport = require('../controllers/worksheetfile.controller');
 const reportImages = require('../controllers/reportImages.controller');
 router.get("/worksheet",auth,worksheetReport.generateWorksheetPdf)
 router.post("/report-image",auth,reportImages.addReportImage)
+router.put("/report-image/:id",auth,reportImages.updateReportImage)
 router.get("/report-image/:id",auth,reportImages.getReportImages)
 module.exports = router;

@@ -14,6 +14,16 @@ const storage = multer.diskStorage({
   }, // unique filename
 });
 
+const deleteIfExists = (fileUrl) => {
+  if (!fileUrl) return;
+
+  const filePath = path.join(process.cwd(), fileUrl);
+
+  if (fs.existsSync(filePath)) {
+    fs.unlinkSync(filePath);
+  }
+};
+
 const fileStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     const uploadPath = path.join("uploads", "reportImages");
@@ -27,11 +37,10 @@ const fileStorage = multer.diskStorage({
 
   filename: (req, file, cb) => {
     const ext = file.originalname.split(".").pop();
-    const baseName = req.body.recordId || "report-image";
-    const timestamp = Date.now();
-
     // Keep filename same for both file & preview
     if (!req.body.filename) {
+      const baseName = req.body.recordId || "report-image";
+      const timestamp = Date.now();
       req.body.filename = `${baseName}-${timestamp}`;
     }
 
@@ -54,22 +63,13 @@ const fileStorage = multer.diskStorage({
 
 const deleteExistFile = async (req, res, next) => {
   try {
-    const oldFile = req.body.previousFilePath; // old file path
-    const oldPreview = req.body.previousPreviewPath; // old preview path
-
-    const deleteIfExists = (fileUrl) => {
-      if (!fileUrl) return;
-
-      const filePath = path.join(process.cwd(), fileUrl);
-
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-        console.log("Deleted:", filePath);
-      }
-    };
-
-    deleteIfExists(oldFile);
-    deleteIfExists(oldPreview);
+    const oldFile = req.query.previousfilepath; // old file path
+    const oldPreview = req.query.previouspreviewpath; // old preview path
+    console.table({ oldFile, oldPreview });
+    if (oldFile || oldPreview) {
+      deleteIfExists(oldFile);
+      deleteIfExists(oldPreview);
+    }
     next();
   } catch (err) {
     console.error("Delete error:", err);
