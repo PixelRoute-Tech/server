@@ -83,7 +83,7 @@ exports.getClients = async (req, res) => {
 
 exports.deleteClients = async (req, res) => {
   try {
-    const data = await Business.findOneAndDelete({clientId:req.params.id});
+    const data = await Business.findByIdAndDelete({clientId:req.params.id});
     if(!data){
        return res.error({status:404,message:"Client not found"})
     }
