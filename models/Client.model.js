@@ -1,6 +1,7 @@
 const moment = require("moment");
 const mongoose = require("mongoose");
 const Counter = require("./Counter.model");
+const {JobRequestSchema} = require("./Job.model");
 const BusinessSchema = new mongoose.Schema({
   clientId: {
     type: String,
@@ -95,5 +96,17 @@ BusinessSchema.pre("save", async function (next) {
     next(err);
   }
 });
+
+BusinessSchema.pre("findByIdAndDelete",async function(next){
+     const client = this
+     try {
+        const deletedResult = await JobRequestSchema.findOneAndDelete({clientId:client.clientId})
+        console.log(`Cascaded deletion: Deleted ${deletedResult.deletedCount} JobRequest(s) for client ${client.clientId}.`);
+        next();
+     } catch (error) {
+        console.log("Error during cascading Client delete:", error);
+        next(error);
+     } 
+})
 
 module.exports = mongoose.model("Client", BusinessSchema);
