@@ -97,10 +97,12 @@ BusinessSchema.pre("save", async function (next) {
   }
 });
 
-BusinessSchema.pre("findByIdAndDelete",async function(next){
-     const client = this
+BusinessSchema.pre("findOneAndDelete",async function(next){
+     const id = this.getQuery()._id
+     const client = await Client.findById(id)
+     console.log("=================>",client)
      try {
-        const deletedResult = await JobRequestSchema.findOneAndDelete({clientId:client.clientId})
+        const deletedResult = await JobRequestSchema.deleteMany({clientId:client.clientId})
         console.log(`Cascaded deletion: Deleted ${deletedResult.deletedCount} JobRequest(s) for client ${client.clientId}.`);
         next();
      } catch (error) {
@@ -108,5 +110,5 @@ BusinessSchema.pre("findByIdAndDelete",async function(next){
         next(error);
      } 
 })
-
-module.exports = mongoose.model("Client", BusinessSchema);
+const Client = mongoose.model("Client", BusinessSchema);
+module.exports = Client

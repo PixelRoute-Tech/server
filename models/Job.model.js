@@ -2,10 +2,10 @@ const mongoose = require("mongoose");
 const Counter = require("./Counter.model");
 const Notification = require("./Notification.model");
 const moment = require("moment");
-
+const WorksheetRecords = require("../models/WorksheetRecord.model");
 const Jobschema = new mongoose.Schema(
   {
-    jobId: { type: String, required: true, unique: false },
+    jobId: { type: String, required: true },
     testMethod: { type: String, required: true },
     testSpec: { type: String, required: true },
     acceptanceSpec: { type: String, required: true },
@@ -30,7 +30,7 @@ const JobRequestSchema = new mongoose.Schema(
     clientId: { type: String, required: true },
     clientName: { type: String, required: true },
     clientAddress: { type: String, required: true },
-    purchaseOrder: { type: String, default:"" },
+    purchaseOrder: { type: String, default: "" },
     summary: { type: String, required: true },
     detailsProvided: { type: String, required: true },
     comment: { type: String },
@@ -60,6 +60,7 @@ JobRequestSchema.pre("save", async function (next) {
     job.jobId = `JOB${seqNumber}`;
     next();
   } catch (err) {
+    console.log("error in JobRequestSchema pre save hook => ", error);
     next(err);
   }
 });
@@ -113,7 +114,7 @@ Jobschema.post("insertMany", async function (docs) {
   }
 });
 
-Jobschema.post('updateOne', async function(result) {
+Jobschema.post("updateOne", async function (result) {
   try {
     const query = this.getQuery();
     const update = this.getUpdate();
@@ -126,7 +127,10 @@ Jobschema.post('updateOne', async function(result) {
     if (!tech) return;
 
     // Prepare message
-    let existingNotif = await Notification.findOne({ userId: tech, isRead: false });
+    let existingNotif = await Notification.findOne({
+      userId: tech,
+      isRead: false,
+    });
 
     if (existingNotif) {
       // Update count message
@@ -137,9 +141,9 @@ Jobschema.post('updateOne', async function(result) {
         {
           $set: {
             message: `You have ${updatedCount} new job assignments.`,
-            updatedAt: new Date()
+            updatedAt: new Date(),
           },
-          $inc: { count: 1 }
+          $inc: { count: 1 },
         }
       );
     } else {
@@ -150,16 +154,103 @@ Jobschema.post('updateOne', async function(result) {
         message: "You have a new job assignment.",
         type: "default",
         isRead: false,
-        count: 1
+        count: 1,
       });
     }
-
   } catch (err) {
     console.error("Notification update error:", err);
   }
 });
 
+JobRequestSchema.pre("deleteMany", async function (next) {
+  try {
+    const filter = this.getFilter();
+    const jobRequestsToDelete = await this.model
+      .find(filter)
+      .select("jobId")
+      .exec();
+    const jobIds = jobRequestsToDelete.map((doc) => doc.jobId);
+    if (jobIds.length > 0) {
+      const deletedItems = await JobModel.deleteMany({
+        jobId: { $in: jobIds },
+      });
+      console.log(
+        `Cascaded deletion: Deleted ${
+          deletedItems.deletedCount
+        } Job(s) for JobRequests with IDs: ${jobIds.join(", ")}.`
+      );
+    } else {
+      console.log(
+        "No JobRequests found matching the criteria, skipping cascade."
+      );
+    }
+
+    next();
+  } catch (error) {
+    console.error("Error in JobRequestSchema pre deleteMany hook", error);
+  }
+});
+
+JobRequestSchema.pre("findOneAndDelete", async function (next) {
+  try {
+    const filter = this.getFilter();
+    const jobRequestsToDelete = await this.model
+      .find(filter)
+      .select("jobId")
+      .exec();
+    const jobIds = jobRequestsToDelete.map((doc) => doc.jobId);
+    if (jobIds.length > 0) {
+      const deletedItems = await JobModel.deleteMany({
+        jobId: { $in: jobIds },
+      });
+      console.log(
+        `Cascaded deletion: Deleted ${
+          deletedItems.deletedCount
+        } Job(s) for JobRequests with IDs: ${jobIds.join(", ")}.`
+      );
+    } else {
+      console.log(
+        "No JobRequests found matching the criteria, skipping cascade."
+      );
+    }
+
+    next();
+  } catch (error) {
+    console.log("Error in JobRequestSchema pre deleteMany hook", error);
+  }
+});
+
+Jobschema.pre("deleteMany", async function (next) {
+  try {
+    const filter = this.getFilter();
+    const jobsToDelete = await this.model.find(filter).select("jobId").exec();
+    const recordsId = jobsToDelete.map(
+      (doc) => doc.jobId
+    );
+    if (recordsId.length > 0) {
+      const deletedItems = await WorksheetRecords.deleteMany({
+        jobId: { $in: recordsId },
+      });
+      console.log(
+        `Cascaded deletion: Deleted ${
+          deletedItems.deletedCount
+        } Job(s) for JobRequests with IDs: ${recordsId.join(", ")}.`
+      );
+    } else {
+      console.log(
+        "No JobRequests found matching the criteria, skipping cascade."
+      );
+    }
+  } catch (error) {
+    console.log("Jobschema pre deleteMany error =>", error);
+    next(error);
+  }
+});
+
+const JobRequestModel = mongoose.model("JobRequest", JobRequestSchema);
+const JobModel = mongoose.model("Job", Jobschema);
+
 module.exports = {
-  JobRequestSchema: mongoose.model("JobRequest", JobRequestSchema),
-  Job: mongoose.model("Job", Jobschema),
+  JobRequestSchema: JobRequestModel,
+  Job: JobModel,
 };

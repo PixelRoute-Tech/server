@@ -18,7 +18,10 @@ exports.register = async (req, res) => {
     console.log("inside client register==>", req.body);
     let client = await Business.findOne({ email });
     if (client) {
-      return res.error({ status: 400, message: "Client already exist" });
+      return res.error({
+        status: 400,
+        message: `Client with email ${email} already exist`,
+      });
     }
     client = new Business({
       businessName,
@@ -47,11 +50,11 @@ exports.register = async (req, res) => {
 };
 exports.updateClient = async (req, res) => {
   try {
-    const clientFields = {}
-    for(let key in req.body){
-       if(req.body[key] && key != "clientId"){
-        clientFields[key] = req.body[key]
-       }
+    const clientFields = {};
+    for (let key in req.body) {
+      if (req.body[key] && key != "clientId") {
+        clientFields[key] = req.body[key];
+      }
     }
     client = await Business.findOneAndUpdate(
       { clientId: req.body.clientId },
@@ -67,7 +70,7 @@ exports.updateClient = async (req, res) => {
       data: client,
     });
   } catch (error) {
-    console.log(error)
+    console.log(error);
     return res.error({ status: 500, error });
   }
 };
@@ -77,18 +80,24 @@ exports.getClients = async (req, res) => {
     const data = await Business.find();
     return res.success({ status: 200, data });
   } catch (error) {
-    throw res.error({ status: 500 });
+    return res.error({ status: 500 });
   }
 };
 
 exports.deleteClients = async (req, res) => {
   try {
-    const data = await Business.findByIdAndDelete({clientId:req.params.id});
-    if(!data){
-       return res.error({status:404,message:"Client not found"})
+    const data = await Business.findByIdAndDelete(req.params.id );
+    console.log("delete client called")
+    if (!data) {
+      return res.error({ status: 404, message: "Client not found" });
     }
-    return res.success({status:200,message:"Client delete successfully",data})
+    return res.success({
+      status: 200,
+      message: "Client delete successfully",
+      data,
+    });
   } catch (error) {
-    throw res.error({ status: 500 });
+    console.log("error in deleteClients = ",error)
+    return res.error({ status: 500 });
   }
 };
