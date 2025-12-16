@@ -189,7 +189,7 @@ exports.updateJobRequest = async (req, res) => {
     console.log("deletedJobs = >",deletedJobs)
     for (const item of jobs) {
       await Job.updateOne(
-        { jobId: data.jobId, tech: item.tech },
+        { jobId: data.jobId, tech: item.tech,testMethod:item.testMethod },
         { ...item, jobId: data.jobId },
         { upsert: true }
       );
