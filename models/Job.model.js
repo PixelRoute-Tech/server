@@ -223,19 +223,19 @@ JobRequestSchema.pre("findOneAndDelete", async function (next) {
 Jobschema.pre("deleteMany", async function (next) {
   try {
     const filter = this.getFilter();
-    const jobsToDelete = await this.model.find(filter).select("jobId").exec();
-    const recordsId = jobsToDelete.map(
-      (doc) => doc.jobId
-    );
+    const jobsToDelete = await this.model
+      .find(filter)
+      .select({ _id: 1, jobId: 1, testMethod: 1 })
+      .lean();
+    const recordsId = jobsToDelete.map((doc) => `record_${doc.jobId}_${doc.testMethod}`);
     if (recordsId.length > 0) {
       const deletedItems = await WorksheetRecords.deleteMany({
-        jobId: { $in: recordsId },
+        recordId: { $in: recordsId },
       });
-      console.log(
-        `Cascaded deletion: Deleted ${
-          deletedItems.deletedCount
-        } Job(s) for JobRequests with IDs: ${recordsId.join(", ")}.`
-      );
+     console.table({
+        deletedItems,
+        recordsId:recordsId.join(",")
+     })
     } else {
       console.log(
         "No JobRequests found matching the criteria, skipping cascade."
