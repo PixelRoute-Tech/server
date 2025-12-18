@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
-const {Job} = require("./Job.model");
+const { Job } = require("./Job.model");
+const RecordImages = require("./RecordImage.model");
 const WorksheetRecordSchema = new mongoose.Schema(
   {
     jobId: {
@@ -40,9 +41,35 @@ WorksheetRecordSchema.post("save", async function (doc) {
       { $set: { status: "Completed" } },
       { new: true }
     );
-    console.log(updatedDoc)
+    console.log(updatedDoc);
   } catch (err) {
     console.log(err);
+  }
+});
+
+WorksheetRecordSchema.pre("deleteMany", async function (next) {
+  try {
+    const filter = this.getFilter();
+    const deletedRecords = await this.model
+      .find(filter)
+      .select({ recordId: 1 })
+      .lean();
+    if (deletedRecords.length > 0) {
+      const recordIds = deletedRecords.map((record) => record.recordId);
+      const deleteImages = await RecordImages.deleteMany({
+        recordId: { $in: recordIds },
+      });
+      console.table(deleteImages);
+      next();
+    } else {
+      next();
+    }
+  } catch (error) {
+    console.log(
+      "Error in WorksheetRecordSchema pre deleteMany hook => ",
+      error
+    );
+    next(error);
   }
 });
 

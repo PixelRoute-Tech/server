@@ -38,10 +38,12 @@ exports.saveJsonFile = async (filePath, data) => {
 
 exports.deleteIfExists = (fileUrl) => {
   if (!fileUrl) return;
-
-  const filePath = path.join(process.cwd(), fileUrl);
-
+  try{
+    const filePath = path.join(process.cwd(), fileUrl);
   if (FS.existsSync(filePath)) {
     FS.unlinkSync(filePath);
+  }
+  }catch(error){
+     console.log("Error in file delete Function",error)
   }
 };

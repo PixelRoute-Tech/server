@@ -1,4 +1,6 @@
 const mongoose = require("mongoose");
+const {deleteIfExists} = require("../utils/files")
+const path = require("path");
 const RecordImageSchema = new mongoose.Schema(
   {
     jobId: {
