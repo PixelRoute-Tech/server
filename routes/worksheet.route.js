@@ -12,6 +12,8 @@ router.get("/record/:id",auth,worksheetController.getWorksheetRecord)
 router.post("/record",auth,worksheetController.saveWorkSheetRecord)
 router.put("/record",auth,worksheetController.updateWorksheetRecord)
 router.get("/record-data/:id",auth,worksheetController.getWorksheetRecordData)
+router.get("/record-data/:id",auth,worksheetController.getWorksheetRecordData)
+router.get("/previous-data/:id",auth,worksheetController.getPreviousData)
 
 
 module.exports = router;

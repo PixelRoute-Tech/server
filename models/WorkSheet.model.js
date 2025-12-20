@@ -64,6 +64,7 @@ const FieldSchema = new mongoose.Schema(
         "table", // ✅ added table type
       ],
     },
+    inReport: { type: Boolean, default: true },
     required: { type: Boolean, default: false },
     options: { type: [OptionSchema], default: [] }, // for select/radio/etc.
 
