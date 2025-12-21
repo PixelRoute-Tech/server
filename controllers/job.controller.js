@@ -181,20 +181,19 @@ exports.updateJobRequest = async (req, res) => {
       { new: true }
     );
     let jobs = req.body.testRows;
-    console.log(req.body);
-    const incomingTechIds = jobs.map((j) => j.tech);
+    const incomingTechIds = jobs.map((j) => j.testMethod);
+       const deletedJobs = await Job.deleteMany({
+      jobId: data.jobId,
+      testMethod: { $nin: incomingTechIds },
+    });
+    console.log("deletedJobs = >",deletedJobs)
     for (const item of jobs) {
       await Job.updateOne(
-        { jobId: data.jobId, tech: item.tech },
+        { jobId: data.jobId, tech: item.tech,testMethod:item.testMethod },
         { ...item, jobId: data.jobId },
         { upsert: true }
       );
     }
-
-    await Job.deleteMany({
-      jobId: data.jobId,
-      tech: { $nin: incomingTechIds },
-    });
 
     if (data) {
       return res.success({
@@ -205,11 +204,7 @@ exports.updateJobRequest = async (req, res) => {
     } else {
       res.success({ status: 404, data, message: "No job found to update" });
     }
-    // return res.success({
-    //   status: 200,
-    //   message: "Job request created successfully",
-    //   data: jobrequest,
-    // });
+
   } catch (error) {
     console.log(error);
     return res.error({ status: 500, error });
@@ -429,3 +424,16 @@ exports.updateJobStatus = async (req, res) => {
     return res.error({status:500,error})
   }
 };
+
+exports.deleteJobRequest = async (req,res)=>{
+   try {
+      const data = await JobRequestSchema.findByIdAndDelete(req.params.id)
+      if(!data){
+         return res.error({status:404,message:`No data found to delete`})
+      }
+      return res.success({status:200,message:"Job request deleted successfully",data})
+   } catch (error) {
+     console.log("Error deleting job request =>",error)
+     res.error({status:500,error})
+   }
+}

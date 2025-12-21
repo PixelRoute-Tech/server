@@ -143,15 +143,15 @@ exports.getWorksheetRecordData = async (req, res) => {
       { $unwind: "$jobs" },
 
       {
-        $lookup:{
-          from:"jobrequests",
-          localField:"jobId",
-          foreignField:"jobId",
-          as:"jobrequests"
-        }
+        $lookup: {
+          from: "jobrequests",
+          localField: "jobId",
+          foreignField: "jobId",
+          as: "jobrequests",
+        },
       },
 
-      {$unwind:"$jobrequests"},
+      { $unwind: "$jobrequests" },
 
       // Fetch worksheet name using worksheetId stored inside Job
       {
@@ -206,8 +206,8 @@ exports.getWorksheetRecordData = async (req, res) => {
           worksheet: "$worksheet",
           job: "$jobs",
           technician: "$technician",
-          jobrequest:"$jobrequests",
-          images:"$images"
+          jobrequest: "$jobrequests",
+          images: "$images",
         },
       },
     ]);
@@ -247,6 +247,47 @@ exports.updateWorksheetRecord = async (req, res) => {
       message: "Worksheet updated successfully",
       data,
     });
+  } catch (error) {
+    console.log(error);
+    return res.error({ status: 500, error });
+  }
+};
+
+exports.getPreviousData = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const data = await WorkSheet.aggregate([
+      // 1. Match the specific worksheet
+      {
+        $match: { workSheetId: id },
+      },
+      // 2. Join with WorksheetRecord collection
+      {
+        $lookup: {
+          from: "worksheetrecords",
+          localField: "workSheetId",
+          foreignField: "worksheetId", // Note: match the case in your schema
+          as: "recordData",
+        },
+      },
+      // 3. Reshape the output object
+      {
+        $project: {
+          _id: 0, // Exclude root _id
+          worksheet: {
+            name: "$name",
+            description: "$description",
+            sections: "$sections",
+            workSheetId: "$workSheetId",
+          },
+          records: "$recordData", // All matched records in this key
+        },
+      },
+    ]);
+    if (!data) {
+      return res.error({ status: 404, message: "No data found" });
+    }
+    return res.success({ status: 200, data:data[0] });
   } catch (error) {
     console.log(error);
     return res.error({ status: 500, error });
