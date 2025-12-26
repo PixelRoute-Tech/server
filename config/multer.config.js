@@ -74,8 +74,33 @@ const deleteExistFile = async (req, res, next) => {
   }
 };
 
+const multiFileUplaod = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadDir = "uploads/job-request-files";
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    const uniqueId = `${Date.now()}`;
+    const cleanName = file.originalname
+      .replace(ext, "")
+      .replace(/\s+/g, "_")
+      .toLowerCase();
+
+    // ✅ final filename
+    const finalName = `job-upload-file-${cleanName}_${uniqueId}${ext}`;
+
+    cb(null, finalName);
+  },
+});
+
 module.exports = {
   commonFiles: multer({ storage }),
   reportFiles: multer({ storage: fileStorage }),
+  multiFiles: multer({ storage: multiFileUplaod }),
   deleteExistFile,
 };
