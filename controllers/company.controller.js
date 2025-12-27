@@ -32,3 +32,4 @@ exports.getCompany = async (req, res) => {
     res.error({ status: 500, error });
   }
 };
+

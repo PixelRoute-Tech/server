@@ -38,12 +38,36 @@ exports.saveJsonFile = async (filePath, data) => {
 
 exports.deleteIfExists = (fileUrl) => {
   if (!fileUrl) return;
-  try{
+  try {
     const filePath = path.join(process.cwd(), fileUrl);
-  if (FS.existsSync(filePath)) {
-    FS.unlinkSync(filePath);
-  }
-  }catch(error){
-     console.log("Error in file delete Function",error)
+    if (FS.existsSync(filePath)) {
+      FS.unlinkSync(filePath);
+    }
+  } catch (error) {
+    console.log("Error in file delete Function", error);
   }
 };
+
+const getFolderTree = async (dirPath) => {
+  const items = await fs.readdir(dirPath, { withFileTypes: true });
+
+  return Promise.all(
+    items.map(async (item) => {
+      const fullPath = path.join(dirPath, item.name);
+
+      if (item.isDirectory()) {
+        return {
+          type: "folder",
+          name: item.name,
+          children: await getFolderTree(fullPath),
+        };
+      } else {
+        return {
+          type: "file",
+          name: item.name,
+        };
+      }
+    })
+  );
+}
+exports.fetchFolderTree = getFolderTree;
