@@ -74,33 +74,38 @@ const deleteExistFile = async (req, res, next) => {
   }
 };
 
-const multiFileUplaod = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadDir = "uploads/job-request-files";
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
-  },
+const createDiskStorage = (uploadDir, prefix = "uploaded") =>
+  multer.diskStorage({
+    destination: (req, file, cb) => {
+      console.log("inside the file upload middleware = #", req.params.id);
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+      cb(null, uploadDir);
+    },
 
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    const uniqueId = `${Date.now()}`;
-    const cleanName = file.originalname
-      .replace(ext, "")
-      .replace(/\s+/g, "_")
-      .toLowerCase();
+    filename: (req, file, cb) => {
+      const ext = path.extname(file.originalname);
 
-    // ✅ final filename
-    const finalName = `job-upload-file-${cleanName}_${uniqueId}${ext}`;
+      const uniqueId =
+        Date.now().toString(36) + Math.random().toString(36).substring(2, 6);
 
-    cb(null, finalName);
-  },
-});
+      const cleanName = file.originalname
+        .replace(ext, "")
+        .replace(/\s+/g, "_")
+        .toLowerCase();
+
+      const finalName = `${prefix}-${cleanName}_${uniqueId}${ext}`;
+
+      cb(null, finalName);
+    },
+  });
 
 module.exports = {
   commonFiles: multer({ storage }),
   reportFiles: multer({ storage: fileStorage }),
-  multiFiles: multer({ storage: multiFileUplaod }),
+  multiFiles: multer({
+    storage: createDiskStorage("uploads/job-request-files", "job-rquest"),
+  }),
   deleteExistFile,
 };

@@ -9,7 +9,7 @@ router.post('/',auth,jobController.saveJobRequest);
 router.get('/:id',auth,jobController.getJobRequests);
 router.delete('/:id',auth,jobController.deleteJobRequest);
 router.get('/details/:id',jobController.getJobDetails);
-router.put('/',auth,jobController.updateJobRequest);
+router.put('/:id',auth,jobController.updateJobRequest);
 router.get('/user-jobs/:id',auth,jobController.getJobsByUser);
 router.put('/user-jobs/:id',auth,jobController.updateJobStatus);
 
