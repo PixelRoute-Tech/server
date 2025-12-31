@@ -62,6 +62,18 @@ const HSEProcedureSchema = new mongoose.Schema(
 );
 
 // Main schema
+
+const FileSchema = new mongoose.Schema({
+  fileName: {
+    type: String,
+    required: true
+  },
+  url: {
+    type: String,
+    required: true
+  },
+}, { _id: false });
+
 const JobRequestSchema = new mongoose.Schema(
   {
     jobId: { type: String, unique: true, required: false },
@@ -90,6 +102,7 @@ const JobRequestSchema = new mongoose.Schema(
     siteInduction: { type: String, required: false },
     hseProcedures: { type: [HSEProcedureSchema], default: [] },
     createdBy: { type: String, required: false },
+    files:{type:[FileSchema],default:[],required:false}
   },
   { timestamps: true }
 );

@@ -178,6 +178,10 @@ exports.updateJobRequest = async (req, res) => {
       }
     }
 
+    if (req.body.filePaths) {
+      updateFields["files"] = req.body.filePaths;
+    }
+
     let data = await JobRequestSchema.findOneAndUpdate(
       { jobId: updateData.jobId },
       { $set: updateFields },

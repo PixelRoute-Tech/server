@@ -77,11 +77,11 @@ const deleteExistFile = async (req, res, next) => {
 const createDiskStorage = (uploadDir, prefix = "uploaded") =>
   multer.diskStorage({
     destination: (req, file, cb) => {
-      console.log("inside the file upload middleware = #", req.params.id);
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
+      const dirName = `${uploadDir}${req.params.id || ""}`;
+      if (!fs.existsSync(dirName)) {
+        fs.mkdirSync(dirName, { recursive: true });
       }
-      cb(null, uploadDir);
+      cb(null, dirName);
     },
 
     filename: (req, file, cb) => {
@@ -101,11 +101,41 @@ const createDiskStorage = (uploadDir, prefix = "uploaded") =>
     },
   });
 
+const attachFilePaths = (req, res, next) => {
+  if (!req.files && !req.file) {
+    if (req.body.filePaths) {
+       req.body.filePaths = JSON.parse(req.body.filePaths)
+    } else {
+      req.body.filePaths = [];
+    }
+    return next();
+  }
+  if (req.files && Array.isArray(req.files)) {
+    req.body.filePaths = req.files.map((file) => ({
+      fileName: file.filename,
+      size:req.file.size || 0,
+      url: `/${file.path.replace(/\\/g, "/")}`,
+    }));
+  } else if (req.file) {
+    req.body.filePaths = [
+      ...req.body.filePaths,
+      {
+        fileName: req.file.filename,
+        size:req.file.size || 0,
+        url: `/${req.file.path.replace(/\\/g, "/")}`,
+      },
+    ];
+  }
+
+  next();
+};
+
 module.exports = {
   commonFiles: multer({ storage }),
   reportFiles: multer({ storage: fileStorage }),
   multiFiles: multer({
-    storage: createDiskStorage("uploads/job-request-files", "job-rquest"),
+    storage: createDiskStorage("uploads/job-request/", "job-rquest"),
   }),
+  attachFilePaths,
   deleteExistFile,
 };
