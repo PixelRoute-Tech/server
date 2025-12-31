@@ -4,6 +4,9 @@ const EmailService = require("../services/email");
 exports.saveJobRequest = async (req, res) => {
   try {
     const formData = JSON.parse(req.body.data);
+    if(req.body.filePaths){
+       formData.files = req.body.filePaths
+    }
     let jobrequest = new JobRequestSchema({ ...formData });
     // console.log(jobrequest);
     jobrequest = await jobrequest.save();
