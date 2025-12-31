@@ -68,6 +68,10 @@ const FileSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  size:{
+    type:Number,
+    required:false
+  },
   url: {
     type: String,
     required: true

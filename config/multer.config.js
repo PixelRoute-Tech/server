@@ -103,25 +103,32 @@ const createDiskStorage = (uploadDir, prefix = "uploaded") =>
 
 const attachFilePaths = (req, res, next) => {
   if (!req.files && !req.file) {
-    if (req.body.filePaths) {
-       req.body.filePaths = JSON.parse(req.body.filePaths)
-    } else {
-      req.body.filePaths = [];
-    }
     return next();
   }
+  if (req.body.previousFiles) {
+    req.body.filePaths = JSON.parse(req.body.previousFiles);
+  } else {
+    req.body.filePaths = [];
+  }
+  if(req.body.deletedFiles){
+    const deleted = JSON.parse(req.body.deletedFiles)
+    deleted.forEach(i=>{
+      deleteIfExists(i)
+    })
+  }
   if (req.files && Array.isArray(req.files)) {
-    req.body.filePaths = req.files.map((file) => ({
+    const newFilePaths = req.files.map((file) => ({
       fileName: file.filename,
-      size:req.file.size || 0,
+      size: file.size || 0,
       url: `/${file.path.replace(/\\/g, "/")}`,
     }));
+    req.body.filePaths = [...newFilePaths, ...req.body.filePaths];
   } else if (req.file) {
     req.body.filePaths = [
       ...req.body.filePaths,
       {
         fileName: req.file.filename,
-        size:req.file.size || 0,
+        size: req.file.size || 0,
         url: `/${req.file.path.replace(/\\/g, "/")}`,
       },
     ];
