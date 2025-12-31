@@ -129,7 +129,7 @@ JobRequestSchema.pre("save", async function (next) {
     job.jobId = `JOB${seqNumber}`;
     next();
   } catch (err) {
-    console.log("error in JobRequestSchema pre save hook => ", error);
+    console.log("error in JobRequestSchema pre save hook => ", err);
     next(err);
   }
 });
@@ -137,19 +137,18 @@ JobRequestSchema.pre("save", async function (next) {
 Jobschema.pre("insertMany", function (next, docs) {
   const createdBy = this.$locals?.createdBy;
   const jobId = this.$locals?.jobId;
-
   if (createdBy || jobId) {
     docs.forEach((doc) => {
       if (createdBy) doc.createdBy = createdBy;
       if (jobId) doc.jobId = jobId;
     });
   }
-
   next();
 });
 
 Jobschema.post("insertMany", async function (docs) {
   try {
+    console.log("inside the second insertMany hoof of Jobschema");
     let notifictionArray = [];
     let userIds = {};
     docs.forEach((d) => {
@@ -176,7 +175,6 @@ Jobschema.post("insertMany", async function (docs) {
         ];
       }
     });
-
     await Notification.insertMany(notifictionArray);
   } catch (err) {
     console.error("Notification insert error:", err);
@@ -275,10 +273,10 @@ JobRequestSchema.pre("findOneAndDelete", async function (next) {
       .select({ _id: 1, jobId: 1, files: 1 })
       .exec();
     const jobIds = jobRequestsToDelete.map((doc) => {
-      if(doc.files){
-        doc.files.forEach(f=>{
-          deleteIfExists(f.url)
-        })
+      if (doc.files) {
+        doc.files.forEach((f) => {
+          deleteIfExists(f.url);
+        });
       }
       return doc.jobId;
     });

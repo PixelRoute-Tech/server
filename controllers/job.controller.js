@@ -8,10 +8,10 @@ exports.saveJobRequest = async (req, res) => {
        formData.files = req.body.filePaths
     }
     let jobrequest = new JobRequestSchema({ ...formData });
-    // console.log(jobrequest);
     jobrequest = await jobrequest.save();
-    Job.$locals = { createdBy: req.body.createdBy, jobId: jobrequest.jobId };
-    Job.insertMany(req.body.testRows);
+    console.log("inside save jobrequest controller = ",jobrequest.jobId);
+    Job.$locals = { createdBy: formData.createdBy, jobId: jobrequest.jobId };
+    Job.insertMany(formData.testRows);
     const client = await Client.findOne({ clientId: req.body.clientId });
     if (process.env.MAIL_SERVICE == "enabled") {
       await EmailService.sendMail({
