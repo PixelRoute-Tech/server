@@ -3,6 +3,7 @@ const Counter = require("./Counter.model");
 const Notification = require("./Notification.model");
 const moment = require("moment");
 const WorksheetRecords = require("../models/WorksheetRecord.model");
+const { deleteIfExists } = require("../utils/files");
 const Jobschema = new mongoose.Schema(
   {
     jobId: { type: String, required: true },
@@ -62,6 +63,25 @@ const HSEProcedureSchema = new mongoose.Schema(
 );
 
 // Main schema
+
+const FileSchema = new mongoose.Schema(
+  {
+    fileName: {
+      type: String,
+      required: true,
+    },
+    size: {
+      type: Number,
+      required: false,
+    },
+    url: {
+      type: String,
+      required: true,
+    },
+  },
+  { _id: false }
+);
+
 const JobRequestSchema = new mongoose.Schema(
   {
     jobId: { type: String, unique: true, required: false },
@@ -90,6 +110,7 @@ const JobRequestSchema = new mongoose.Schema(
     siteInduction: { type: String, required: false },
     hseProcedures: { type: [HSEProcedureSchema], default: [] },
     createdBy: { type: String, required: false },
+    files: { type: [FileSchema], default: [], required: false },
   },
   { timestamps: true }
 );
@@ -108,7 +129,7 @@ JobRequestSchema.pre("save", async function (next) {
     job.jobId = `JOB${seqNumber}`;
     next();
   } catch (err) {
-    console.log("error in JobRequestSchema pre save hook => ", error);
+    console.log("error in JobRequestSchema pre save hook => ", err);
     next(err);
   }
 });
@@ -116,19 +137,18 @@ JobRequestSchema.pre("save", async function (next) {
 Jobschema.pre("insertMany", function (next, docs) {
   const createdBy = this.$locals?.createdBy;
   const jobId = this.$locals?.jobId;
-
   if (createdBy || jobId) {
     docs.forEach((doc) => {
       if (createdBy) doc.createdBy = createdBy;
       if (jobId) doc.jobId = jobId;
     });
   }
-
   next();
 });
 
 Jobschema.post("insertMany", async function (docs) {
   try {
+    console.log("inside the second insertMany hoof of Jobschema");
     let notifictionArray = [];
     let userIds = {};
     docs.forEach((d) => {
@@ -155,7 +175,6 @@ Jobschema.post("insertMany", async function (docs) {
         ];
       }
     });
-
     await Notification.insertMany(notifictionArray);
   } catch (err) {
     console.error("Notification insert error:", err);
@@ -215,9 +234,16 @@ JobRequestSchema.pre("deleteMany", async function (next) {
     const filter = this.getFilter();
     const jobRequestsToDelete = await this.model
       .find(filter)
-      .select("jobId")
+      .select({ _id: 1, jobId: 1, files: 1 })
       .exec();
-    const jobIds = jobRequestsToDelete.map((doc) => doc.jobId);
+    const jobIds = jobRequestsToDelete.map((doc) => {
+      if (doc.files) {
+        doc.file.forEach((f) => {
+          deleteIfExists(f.url);
+        });
+      }
+      return doc.jobId;
+    });
     if (jobIds.length > 0) {
       const deletedItems = await JobModel.deleteMany({
         jobId: { $in: jobIds },
@@ -244,9 +270,16 @@ JobRequestSchema.pre("findOneAndDelete", async function (next) {
     const filter = this.getFilter();
     const jobRequestsToDelete = await this.model
       .find(filter)
-      .select("jobId")
+      .select({ _id: 1, jobId: 1, files: 1 })
       .exec();
-    const jobIds = jobRequestsToDelete.map((doc) => doc.jobId);
+    const jobIds = jobRequestsToDelete.map((doc) => {
+      if (doc.files) {
+        doc.files.forEach((f) => {
+          deleteIfExists(f.url);
+        });
+      }
+      return doc.jobId;
+    });
     if (jobIds.length > 0) {
       const deletedItems = await JobModel.deleteMany({
         jobId: { $in: jobIds },
