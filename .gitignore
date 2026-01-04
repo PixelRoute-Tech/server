@@ -7,3 +7,6 @@ public/index.html
 public/placeholder.svg
 public/robots.txt
 .env
+temp_auto_push.bat
+temp_interactive_push.bat
+branch_structure.json

@@ -5,8 +5,12 @@ const connectDB = require("./config/db.config");
 const responseHandler = require("./middleware/response.middleware");
 const {initSocket} = require("./config/socket.config")
 const cors = require("cors");
+const passport = require("./config/passport.config");
+const cookieParser = require("cookie-parser");
 require("dotenv").config();
 const app = express();
+app.use(cookieParser());
+app.use(passport.initialize());
 app.use(
   cors({
     origin: "*",
