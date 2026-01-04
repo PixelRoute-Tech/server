@@ -1,6 +1,6 @@
 const { JobRequestSchema, Job } = require("../models/Job.model");
 const Client = require("../models/Client.model");
-const EmailService = require("../services/email");
+const EmailService = require("../services/email.services");
 exports.saveJobRequest = async (req, res) => {
   try {
     const formData = JSON.parse(req.body.data);

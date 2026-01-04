@@ -15,8 +15,8 @@ const UserSchema = new mongoose.Schema({
   },
   companyId: {
     type: String,
-    required: true,
-    unique: true,
+    required: false,
+    unique: false,
   },
   userName: {
     type: String,
@@ -37,7 +37,8 @@ const UserSchema = new mongoose.Schema({
   },
   userRole: {
     type: String,
-    required: true,
+    required: false,
+    default:"user"
   },
   designation: {
     type: String,
@@ -45,15 +46,15 @@ const UserSchema = new mongoose.Schema({
   },
   department: {
     type: String,
-    required: true,
+    required: false,
   },
   qualification: {
     type: String,
-    required: true,
+    required: false,
   },
   password: {
     type: String,
-    required: true,
+    required: false,
   },
   date: {
     type: String,
